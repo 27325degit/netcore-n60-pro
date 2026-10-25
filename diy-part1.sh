@@ -22,55 +22,15 @@ git clone https://github.com/rufengsuixing/luci-app-adguardhome package/luci-app
 chmod -R 755 ./package/luci-app-adguardhome/*
 
 # ============================================================
-# 自定义追加（N60 Pro 全依赖版，基于 2026-10-25 上游快照）
+# 自定义追加（N60 Pro 6.6 全依赖版，2026-10-26 修正）
 # ============================================================
 
-# ---- 1. 外部软件源 ----
+# ---- 外部软件源 ----
 # helloworld 源已在上方提供 luci-app-passwall / passwall2 / xray-core
 # OpenClash 源
 echo 'src-git openclash https://github.com/vernesong/OpenClash' >>feeds.conf.default
-# iStore 源（linkease 官方，含依赖）
-echo 'src-git istore https://github.com/linkease/istore.git;main' >>feeds.conf.default
-echo 'src-git nas https://github.com/linkease/nas-packages.git;master' >>feeds.conf.default
-echo 'src-git nas_luci https://github.com/linkease/nas-packages-luci.git;main' >>feeds.conf.default
 
-# ---- 2. 开启容器所需内核选项（关键！）----
-# 实测 237 的 6.6 内核里 CGROUPS / NAMESPACES / VETH / MACVLAN / SECCOMP
-# 全部是 "# ... is not set"，且不提供对应 kmod，opkg 永远装不上。
-# 不在这里打开，以后就算把 dockerd 装到 U 盘也跑不起来。
-for KC in target/linux/mediatek/filogic/config-6.6 target/linux/mediatek/mt7986/config-6.6; do
-  if [ -f "$KC" ]; then
-    cat >> "$KC" <<'KERNEL_EOF'
-
-# ---- 容器/Docker 支持（自定义追加）----
-CONFIG_CGROUPS=y
-CONFIG_MEMCG=y
-CONFIG_MEMCG_KMEM=y
-CONFIG_CGROUP_PIDS=y
-CONFIG_CGROUP_DEVICE=y
-CONFIG_CGROUP_FREEZER=y
-CONFIG_CGROUP_CPUACCT=y
-CONFIG_CGROUP_SCHED=y
-CONFIG_FAIR_GROUP_SCHED=y
-CONFIG_CGROUP_PERF=y
-CONFIG_CGROUP_NET_PRIO=y
-CONFIG_CGROUP_NET_CLASSID=y
-CONFIG_CPUSETS=y
-CONFIG_BLK_CGROUP=y
-CONFIG_NAMESPACES=y
-CONFIG_NET_NS=y
-CONFIG_PID_NS=y
-CONFIG_IPC_NS=y
-CONFIG_UTS_NS=y
-CONFIG_USER_NS=y
-CONFIG_SECCOMP=y
-CONFIG_SECCOMP_FILTER=y
-CONFIG_POSIX_MQUEUE=y
-CONFIG_KEYS=y
-CONFIG_NET_CLS_CGROUP=y
-# BBR 拥塞控制
-CONFIG_TCP_CONG_BBR=y
-KERNEL_EOF
-    echo "已为 $KC 追加容器内核选项"
-  fi
-done
+# 说明：不再向内核 config 手动追加 cgroup/namespace 符号。
+# 6.6 主线 OpenWrt 的内核（generic + filogic/config-6.6）默认已开启
+# cgroup/namespace/loop/overlayfs 等 Docker 所需特性，手动追加 5.x 旧符号
+# 反而会导致重复定义或无效符号，破坏编译。Docker 只需 extroot 后 opkg 装用户态即可。
