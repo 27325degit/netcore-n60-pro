@@ -20,6 +20,9 @@ echo 'src-git helloworld https://github.com/fw876/helloworld;master' >>feeds.con
 # 与 1.12.25 产生配置字段不兼容风险。
 echo 'src-git homeproxy https://github.com/immortalwrt/homeproxy^98a6ad9e71484528008ff435694fd107591f3a1d' >>feeds.conf.default
 
+# passwall2 源（Openwrt-Passwall 组织真身；钉当前 main HEAD，与 homeproxy 一致可复现）
+echo 'src-git passwall2 https://github.com/Openwrt-Passwall/openwrt-passwall2^22e37d49b18ef6bf1c2a942be9c3a066095931b1' >>feeds.conf.default
+
 # 说明：
 # 1. 已移除 ADGuardHome（git clone），原因：各线 config 均已删除 luci-app-adguardhome，
 #    且 ADGH 与 PassWall2/homeproxy 抢 DNS(53)，同时保留会冲突。

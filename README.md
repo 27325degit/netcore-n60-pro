@@ -18,9 +18,9 @@ CONFIG_TARGET_DEVICE_mediatek_mt7986_DEVICE_netcore_n60pro-512rom=y
 CONFIG_TARGET_DEVICE_PACKAGES_mediatek_mt7986_DEVICE_netcore_n60pro-512rom=""
 ```
 - [Immortalwrt源码](https://github.com/immortalwrt/immortalwrt)，自定义脚本diy-part4.sh，配置文件immortalwrt.config.
-- [237源码](https://github.com/padavanonly/immortalwrt-mt798x-24.10)，6.6内核自定义脚本diy-part5-6.6.sh，配置文件padavanonly-immortalwrt-mt798x-6.6.config，5.4内核版本自定义脚本diy-part5-2410.sh，配置文件padavanonly-immortalwrt-mt798x-2410.config.
+- [官方 ImmortalWrt 主线](https://github.com/immortalwrt/immortalwrt)（openwrt-24.10 分支，6.6 内核），自定义脚本diy-part5-6.6.sh，配置文件padavanonly-immortalwrt-mt798x-6.6.config；5.4 内核版本仍为[237源码](https://github.com/padavanonly/immortalwrt-mt798x-24.10)，自定义脚本diy-part5-2410.sh，配置文件padavanonly-immortalwrt-mt798x-2410.config.
 - diy-part1.sh是共用脚本，加入了helloworld和homeproxy源码，所有默认配置文件集成了定时重启、终端ttyd、组播代理omcproxy、组播转换msd_lite，需要自定义的请自行修改对应的自定义脚本和配置文件.
-- 6.6线(padavanonly-immortalwrt-mt798x-6.6.config)额外集成了PassWall2+xray核心、homeproxy+sing-box核心、Docker内核模块、USB/文件系统/网络共享(ksmbd)/打印(CUPS内核模块)等，Docker用户态与iStore需刷机后opkg安装.
+- 6.6线(padavanonly-immortalwrt-mt798x-6.6.config，已切到官方 ImmortalWrt 主线 openwrt-24.10)额外集成了PassWall2+xray核心、homeproxy+sing-box核心、Docker内核模块、USB/文件系统/网络共享(ksmbd)/打印(CUPS内核模块)等，Docker用户态与iStore需刷机后opkg安装；产物为 .itb 固件（不再是 .bin）.
 - 在Actions页面运行对应的源码固件编译文件，点击右侧的 Run workflow 按钮开始编译，正常的话大概1-2h左右能看到编译结果，编译完成后下载相应的固件即可.
 
 ## 6.6 线刷机后必读（稳定性关键）
@@ -29,10 +29,9 @@ CONFIG_TARGET_DEVICE_PACKAGES_mediatek_mt7986_DEVICE_netcore_n60pro-512rom=""
 两个插件都会接管 DNS(53 端口)和 nftables 分流规则，**切勿同时开启**，否则互相抢 53 端口与规则导致全局断网。默认两者都编译进固件（方便切换），但运行时只开其中一个。
 
 **2. HNAT 硬件加速 + PPPoE 掉线兜底**
-237 源码存在已知问题：长时间拨号后可能 PPPoE 掉线且无法自动重拨。对策：
-- 在 `服务 → WatchCat` 设置「定期 ping 外网 IP（如 223.5.5.5），失败 N 次自动重启 WAN/整机」，实现掉线自愈。
-- 若仍频发掉线，在 `网络 → Turbo ACC` 里关闭 HNAT/硬件加速走纯 CPU 转发（千兆内无感），是最彻底的稳定方案。
-- 固件已默认关闭主线 flow-offload（避免与 HNAT 双重加速冲突），无需再动。
+6.6 线已切到官方 ImmortalWrt 主线，硬件加速走开源 `mtk_eth_soc` PPE（不再依赖 237 闭源 HNAT），稳定性更好。对策：
+- 在 `服务 → WatchCat` 设置「定期 ping 外网 IP（如 223.5.5.5），失败 N 次自动重启 WAN/整机」，作为掉线自愈兜底。
+- 固件已默认关闭主线 flow-offload（避免与 HNAT 双重加速冲突），无需再动；若仍频发掉线，可临时关闭硬件加速走纯 CPU 转发（千兆内基本无感）。
 
 **3. SQM QoS 用 cake 算法**
 固件已编入 `kmod-sched-cake`，刷机后 `网络 → SQM QoS` 选 cake 算法即可缓解宽带跑满时丢包/延迟抖动。
